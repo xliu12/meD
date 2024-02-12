@@ -1,5 +1,4 @@
-# library(mlr3)
-# library(mlr3learners)
+
 library(SuperLearner)
 library(ranger)
 library(glmnet)
@@ -10,13 +9,6 @@ library(hal9001)
 # library(origami)
 library(gam)
 library(earth)
-#  ZINB model: Zero-inflated and Overdispersed Data https://cran.r-project.org/web/packages/mpath/vignettes/static_german.pdf
-# library(pscl)
-# library(zic)
-# library(mpath) #  zipath(): Fit zero-inflated count data linear model with lasso  (or elastic net), snet or mnet regularization
-# library(flexsurv)
-# # devtools::install_github("wuziyueemory/twostageSL") 
-# library(twostageSL) # super learner for zero inflated outcome
 # library(earth) # Multivariate adaptive regression splines (MARS) [https://bradleyboehmke.github.io/HOML/mars.html]
 # listWrappers()
 # SL.gbm; For maximum accuracy one might try at least the following models: glmnet, randomForest, XGBoost, SVM, and bartMachine. 
@@ -32,18 +24,6 @@ SL.hal.modified <- function(...) {
              # reduce_basis = NULL,
              X_unpenalized = NULL
   )
-}
-
-bound_precision <- function(vals, tol = 1e-5) {
-  vals[vals < tol] <- tol
-  vals[vals > 1 - tol] <- 1 - tol
-  return(vals)
-}
-bound_propensity <- function(vals, bounds = c(0.01, 0.99)) {
-  # assertthat::assert_that(!(max(vals) > 1 || min(vals) < 0))
-  vals[vals < bounds[1]] <- bounds[1]
-  vals[vals > bounds[2]] <- bounds[2]
-  return(vals)
 }
 
 
@@ -855,3 +835,28 @@ SL.xgboost.scaledY <- function (Y, X, newX, family, obsWeights, id, ntrees = 100
   out = list(pred = pred, fit = fit)
   return(out)
 }
+
+
+
+bound_precision <- function(vals, tol = 1e-5) {
+  vals[vals < tol] <- tol
+  vals[vals > 1 - tol] <- 1 - tol
+  return(vals)
+}
+bound_propensity <- function(vals, bounds = c(0.01, 0.99)) {
+  # assertthat::assert_that(!(max(vals) > 1 || min(vals) < 0))
+  vals[vals < bounds[1]] <- bounds[1]
+  vals[vals > bounds[2]] <- bounds[2]
+  return(vals)
+}
+scale_to_unit <- function(vals) {
+  vals_scaled <- (vals - min(vals)) / (max(vals) - min(vals))
+  vals_scaled <- bound_precision(vals_scaled)
+  return(vals_scaled)
+}
+scale_from_unit <- function(scaled_vals, max_orig, min_orig) {
+  vals_orig <- (scaled_vals * (max_orig - min_orig)) + min_orig
+  return(vals_orig)
+}
+
+
