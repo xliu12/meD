@@ -9,11 +9,8 @@ library(fastDummies)
 library(missForest)
 options(dplyr.print_max = 100, pillar.print_max = 50, dplyr.width = Inf)
 
-# load("~/Library/CloudStorage/Box-Box/Labs/Mediated/R_mediated/lift_tmp.RData")
-# load("~/Library/CloudStorage/Box-Box/Labs/Mediated/R_mediated/lift_others2.RData")
 
 
-load("~/Library/CloudStorage/Box-Box/Labs/Mediated/R_mediated/lift1228.RData") 
 
 # Tables, Figures ----------------------------
 # / theme figure -----------
