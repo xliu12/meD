@@ -1,29 +1,5 @@
 library(SuperLearner)
 library(origami)
-#library(hal9001)
-# library(tidyverse)
-bound_precision <- function(vals, tol = 1e-5) {
-  vals[vals < tol] <- tol
-  vals[vals > 1 - tol] <- 1 - tol
-  return(vals)
-}
-bound_propensity <- function(vals, bounds = c(0.01, 0.99)) {
-  # assertthat::assert_that(!(max(vals) > 1 || min(vals) < 0))
-  vals[vals < bounds[1]] <- bounds[1]
-  vals[vals > bounds[2]] <- bounds[2]
-  return(vals)
-}
-scale_to_unit <- function(vals) {
-  vals_scaled <- (vals - min(vals)) / (max(vals) - min(vals))
-  vals_scaled <- bound_precision(vals_scaled)
-  return(vals_scaled)
-}
-scale_from_unit <- function(scaled_vals, max_orig, min_orig) {
-  vals_orig <- (scaled_vals * (max_orig - min_orig)) + min_orig
-  return(vals_orig)
-}
-
-
 
 eif.onefold <- function(fold,
                         data_in, 
@@ -137,64 +113,6 @@ eif.onefold <- function(fold,
     SL_library = SL_user #c("SL.glm", "SL.ranger", "SL.glmnet") #, "SL.ranger", "SL.glmnet"
   )
   
-  # # estimating E(Y|t,r,C) by integrating out M, as in e.g., Tchetgen Tchetgen 2012
-  # y_out.t1r0c <- fitting.v_pseudo(
-  #   train_data = train_data, valid_data = valid_data,
-  #   vmodel = "y_M ~ t1 + r0 + C", 
-  #   Cnames = Cnames, 
-  #   Mnames = Mnames,
-  #   # Znames = Znames,
-  #   # Xnames = Xnames, 
-  #   y_out.mtrc = y_out.mtrc, 
-  #   t_out.c = t_out.c,
-  #   r_out.tc = r_out.tc, 
-  #   r_out.mtc = r_out.mtc,
-  #   Yfamily = Yfamily,
-  #   SL_library = SL_user #c("SL.glm", "SL.ranger", "SL.glmnet")
-  # )
-  # y_out.t1r1c <- fitting.v_pseudo(
-  #   train_data = train_data, valid_data = valid_data,
-  #   vmodel = "y_M ~ t1 + r1 + C", 
-  #   Cnames = Cnames, 
-  #   Mnames = Mnames,
-  #   # Znames = Znames,
-  #   # Xnames = Xnames, 
-  #   y_out.mtrc = y_out.mtrc, 
-  #   t_out.c = t_out.c,
-  #   r_out.tc = r_out.tc, 
-  #   r_out.mtc = r_out.mtc,
-  #   Yfamily = Yfamily,
-  #   SL_library = SL_user #c("SL.glm", "SL.ranger", "SL.glmnet")
-  # )
-  # y_out.t0r0c <- fitting.v_pseudo(
-  #   train_data = train_data, valid_data = valid_data,
-  #   vmodel = "y_M ~ t0 + r0 + C", 
-  #   Cnames = Cnames, 
-  #   Mnames = Mnames,
-  #   # Znames = Znames,
-  #   # Xnames = Xnames, 
-  #   y_out.mtrc = y_out.mtrc, 
-  #   t_out.c = t_out.c,
-  #   r_out.tc = r_out.tc, 
-  #   r_out.mtc = r_out.mtc,
-  #   Yfamily = Yfamily,
-  #   SL_library = SL_user #c("SL.glm", "SL.ranger", "SL.glmnet")
-  # )
-  # y_out.t0r1c <- fitting.v_pseudo(
-  #   train_data = train_data, valid_data = valid_data,
-  #   vmodel = "y_M ~ t0 + r1 + C", 
-  #   Cnames = Cnames, 
-  #   Mnames = Mnames,
-  #   # Znames = Znames,
-  #   # Xnames = Xnames, 
-  #   y_out.mtrc = y_out.mtrc, 
-  #   t_out.c = t_out.c,
-  #   r_out.tc = r_out.tc, 
-  #   r_out.mtc = r_out.mtc,
-  #   Yfamily = Yfamily,
-  #   SL_library = SL_user #c("SL.glm", "SL.ranger", "SL.glmnet")
-  # )
-  
   
   # fit pseudo outcome models
   
@@ -297,23 +215,6 @@ eif.onefold <- function(fold,
     })
     
     eif <- eif_y + eif_v + v_pred_valid
-    
-    
-    # # Partial linear in M (sequential regression) -------------------
-    # m.trc_valid_r0 <- predict(m_out.trc$m1_fit, valid_data_r0[, m_out.trc$m1_fit$varNames], onlySL = TRUE)$pred
-    # m.trc_valid_r0 <- as.numeric(m.trc_valid_r0)
-    # 
-    # valid_data_r1Mr0 <- valid_data
-    # valid_data_r1Mr0$R <- 1; valid_data_r1Mr0$tt <- tval; valid_data_r1Mr0[, Mnames] <- m.trc_valid_r0
-    # valid_data_r1Mr0[, "ttR"] <- with(valid_data_r1Mr0, {tt*R})
-    # valid_data_r1Mr0[, RMnames] <- valid_data_r1Mr0$R * valid_data_r1Mr0[, Mnames]
-    # valid_data_r1Mr0[, ttMnames] <- valid_data_r1Mr0$tt * valid_data_r1Mr0[, Mnames]
-    # valid_data_r1Mr0[, ttRMnames] <- valid_data_r1Mr0$tt * valid_data_r1Mr0$R * valid_data_r1Mr0[, Mnames]
-    # 
-    # est_reg <- yreg.mtrc_valid_r1Mr0 <- predict(y_out.mtrc$y_fit, valid_data_r1Mr0[, y_out.mtrc$y_fit$varNames], onlySL = TRUE)$pred
-    
-    
-    
     
     # Y( tval ) | r=1 -----------
     y.trc_valid_r1 <- predict(y_out.trc$y_fit, valid_data_r1[, y_out.trc$y_fit$varNames], onlySL = TRUE)$pred
@@ -915,3 +816,4 @@ tmle.medMO <- function(
   )
   return(tmle_out)
 }
+
