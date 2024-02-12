@@ -1,6 +1,8 @@
 library(SuperLearner)
 library(origami)
 
+source("fitmodels.R")
+
 eif.onefold <- function(fold,
                         data_in, 
                         Cnames, 
