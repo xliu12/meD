@@ -19,7 +19,6 @@
 #' @examples
 #'  # data(data_in)
 #'  # data_in <- read.csv("data/data_in.csv", header = TRUE)
-#'  # data_in$obs_weights_Y <- rep(1, nrow(data_in))
 #'  # Mnames <- grep("Mdat", colnames(data_in), value = T)
 #'  # Cnames <- grep("Cdat", colnames(data_in), value = T)
 #'  # out <- meDreD(
