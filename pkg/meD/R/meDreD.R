@@ -2,6 +2,7 @@
 #' Estimation of the mediated moderation (meD) and remaining moderation (reD)
 #' @param data_in a \code{data.frame} containing the observed data.
 #'    In "data_in", column "tt" is the treatment assignment ("tt" is coded as 0 for individuals in the control condition and as 1 for individuals in the treatment condition);
+#'    column "R" is a dummy indicator of the subgroup status.
 #'    column "Y" is the outcome.
 #' @param Mnames a character vector of the names of the columns in "data_in" that correspond to mediators (M).
 #' @param Cnames a character vector of the names of the columns in "data_in" that correspond to baseline covariates (C).
