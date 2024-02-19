@@ -1,2 +1,2 @@
-R code for mediated moderation. 
+R code for mediated moderation analysis.
 
