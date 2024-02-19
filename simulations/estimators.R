@@ -2,27 +2,6 @@ library(SuperLearner)
 library(origami)
 #library(hal9001)
 # library(tidyverse)
-bound_precision <- function(vals, tol = 1e-5) {
-  vals[vals < tol] <- tol
-  vals[vals > 1 - tol] <- 1 - tol
-  return(vals)
-}
-bound_propensity <- function(vals, bounds = c(0.01, 0.99)) {
-  # assertthat::assert_that(!(max(vals) > 1 || min(vals) < 0))
-  vals[vals < bounds[1]] <- bounds[1]
-  vals[vals > bounds[2]] <- bounds[2]
-  return(vals)
-}
-scale_to_unit <- function(vals) {
-  vals_scaled <- (vals - min(vals)) / (max(vals) - min(vals))
-  vals_scaled <- bound_precision(vals_scaled)
-  return(vals_scaled)
-}
-scale_from_unit <- function(scaled_vals, max_orig, min_orig) {
-  vals_orig <- (scaled_vals * (max_orig - min_orig)) + min_orig
-  return(vals_orig)
-}
-
 
 
 eif.onefold <- function(fold,
@@ -915,3 +894,26 @@ tmle.medMO <- function(
   )
   return(tmle_out)
 }
+
+
+bound_precision <- function(vals, tol = 1e-5) {
+  vals[vals < tol] <- tol
+  vals[vals > 1 - tol] <- 1 - tol
+  return(vals)
+}
+bound_propensity <- function(vals, bounds = c(0.01, 0.99)) {
+  # assertthat::assert_that(!(max(vals) > 1 || min(vals) < 0))
+  vals[vals < bounds[1]] <- bounds[1]
+  vals[vals > bounds[2]] <- bounds[2]
+  return(vals)
+}
+scale_to_unit <- function(vals) {
+  vals_scaled <- (vals - min(vals)) / (max(vals) - min(vals))
+  vals_scaled <- bound_precision(vals_scaled)
+  return(vals_scaled)
+}
+scale_from_unit <- function(scaled_vals, max_orig, min_orig) {
+  vals_orig <- (scaled_vals * (max_orig - min_orig)) + min_orig
+  return(vals_orig)
+}
+
