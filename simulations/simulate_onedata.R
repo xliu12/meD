@@ -200,7 +200,7 @@ condition1 <- data.frame(expand.grid(
   quadratic.Y = c(F, T),
   Yfamily = c("binomial"),
   num_c = c(20),
-  Fit =  c("mlr")
+  Fit =  c("linear")
 ))
 adding1 <- data.frame(expand.grid(
   n = c(300, 500, 1000),
@@ -210,7 +210,7 @@ adding1 <- data.frame(expand.grid(
   quadratic.Y = c(F, T),
   Yfamily = c("binomial"),
   num_c = c(20),
-  Fit =  c("linear")
+  Fit =  c("mlr")
 ))
 condition_all <- data.frame(do.call(rbind, list(condition1, adding1)))
 condition <- condition_all[(condition_all$quadratic.R + condition_all$quadratic.M + condition_all$quadratic.Y) %in% c(1, 3, 0), ]
@@ -272,30 +272,6 @@ OneData <- function(iseed = 1, cond = 1){
   })
 
   out <- list(estimates = estimates, true_effects = true_effects)
-
-  out <- list(
-    results = data.frame(
-      condition[cond, ],
-      effect = c("Yt1r1", "Yt1r0", "Yt1r1.Mt1r0",
-                 "Yt0r1", "Yt0r0", "Yt0r1.Mt0r0",
-                 "reD",
-                 "meD",
-                 "toD"),
-      # true
-      true_val = t(true_effects),
-      # tml
-      tml_estimate = tmle_out$tml_estimates,
-      tml_interval = t(tmle_out$tml_intervals),
-      # onestep
-      onestep_estimate = crossfit_out$estimates,
-      onestep_interval = t(crossfit_out$z_intervals),
-      stderr = crossfit_out$stderrors
-      # weighting-based
-      , weighting_estimate = crossfit_out$weighting_estimates
-    ) #,
-    # crossfit_out = crossfit_out,
-    # tmle_out = tmle_out
-  )
 
   return(out)
 }
