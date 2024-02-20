@@ -8,9 +8,10 @@
 #' @param Cnames a character vector of the names of the columns in "data_in" that correspond to baseline covariates (C).
 #' @param Yfamily a character specifying the link function for a generalized linear model for the outcome. Currently supported options include "gaussian" and "binomial".
 #' @param estimator a character specifying the estimator for the mediated moderation (meD) and remaining moderation (reD). Currently supported options include "onestep" and "tml", denoting the one-step estimator and targeted minimum loss estimator, respectively.
-#' @param nuisance_estimation a character specifying the method for estimating the nuisance models. Currently supported options include: "linear" and "mlr". For "linear", the nuisance models are estimated using generalized linear regressions with linear terms of the covariates. For "mlr", the nuisance models are estimated using the "SuperLearner" R package (<https://cran.r-project.org/package=SuperLearner>) with an ensemble of machine learning methods (the specific methods can be modified).
+#' @param nuisance_estimation a character vector specifying the method for estimating the nuisance models. Currently supported options include the list of functions included in the "SuperLearner" package (<https://cran.r-project.org/package=SuperLearner>; can be found with the function listWrappers() of the "SuperLearner" package).
 #' @param num_folds the number of folds used for the cross-fitting procedure.
 #'
+#' @return A data frame containing the estimates of the mediated moderation (meD) and remaining moderation (reD), as well as the total moderation (toD) and the average potential outcomes in the effect definitions. These include the average potential outcomes of each subgroup under each treatment assignment (Yt1r1, Yt1r0, Yt0r1, Yt0r0), and the average potential outcomes of the comparison subgroup if the potential mediator distribution were shifted to be the same as that of the reference subgroup (Yt1r1.Mt1r0, Yt0r1.Mt0r0). The output also includes the 0.95 confidence intervals constructed based on the asymptotic variance estimates (column names ending with "_interval.1" and "_interval.2").
 
 #'
 #'
@@ -25,7 +26,7 @@
 #'  # data_in = data_in,
 #'  # Mnames = Mnames,
 #'  # Cnames = Cnames,
-#'  # nuisance_estimation = "linear",
+#'  # nuisance_estimation = "SL.glm",
 #'  # Yfamily = "binomial",
 #'  # estimator = "onestep",
 #'  # num_folds = 5)
@@ -40,12 +41,13 @@ meDreD <- function(
     data_in,
     Mnames,
     Cnames,
-    nuisance_estimation = "mlr", #"linear"
+    nuisance_estimation = c("SL.glm"), #"linear"
     Yfamily = "binomial",
     estimator = "onestep",
     num_folds = 5
 ) {
 
+  data_in$id <- 1:nrow(data_in)
   data_in$obs_weights_Y <- rep(1, nrow(data_in))
   Cnames <- grep("Cdat", colnames(data_in), value = T)
   Mnames <- grep("Mdat", colnames(data_in), value = T)
@@ -141,7 +143,7 @@ crossfit.onestep <- function(
     data_in,
     Cnames,
     Mnames,
-    Fit = "mlr", #Fit = "linear",
+    Fit, # e.g., Fit = c("SL.glm")
     Yfamily = "binomial"
 ) {
 
@@ -152,8 +154,7 @@ crossfit.onestep <- function(
                               data_in = data_in,
                               Cnames = Cnames,
                               Mnames = Mnames,
-                              # Xnames = Xnames,
-                              Fit = Fit, # Fit = "mlr"
+                              Fit = Fit,
                               Yfamily = Yfamily,
                               cv = FALSE
     )
@@ -179,7 +180,7 @@ crossfit.onestep <- function(
       data_in = data_in,
       Cnames = Cnames,
       Mnames = Mnames,
-      Fit = Fit, # Fit = "mlr"
+      Fit = Fit,
       Yfamily = Yfamily,
       cv = TRUE,
       use_future = FALSE, .combine = FALSE
@@ -254,7 +255,6 @@ tmle.medMO <- function(
 
     # make sure rows of the components and data for the same individuals
     cv_components <- cv_components[order(cv_components$valid_id), ]
-    # sum(cv_components$valid_id != data_in$id)
 
     tml_data <- merge(tml_data, cv_components, by.x = "id", by.y = "valid_id")
     colnames(tml_data)
@@ -263,7 +263,6 @@ tmle.medMO <- function(
     })
     min_y <- range_y[1]
     max_y <- range_y[2]
-
 
     # scaled outcome, pseudo outcome, predicted outcome
     tml_data$Yscaled <- bound_precision((tml_data$Y - min_y) / (max_y - min_y))
@@ -283,7 +282,6 @@ tmle.medMO <- function(
       1*(tt==tval)*(R==1) * (1-r1.mtc_pred_valid) / bound_propensity(tval.c_pred_valid * r1.mtc_pred_valid * (1-r1.tc_pred_valid))
     })
 
-
     max_iter <- 3
     tiltmod_tol <- 10
 
@@ -291,13 +289,11 @@ tmle.medMO <- function(
     se_eif <- as.numeric(sqrt(var(tml_data$eif) / length(tml_data$eif)))
     tilt_stop_crit <- se_eif / log( length(tml_data$eif) )
 
-    # Iterative targeting
     yfit_score <- Inf
     eif_stop_crit <- FALSE
     n_iter <- 0
     while ((!eif_stop_crit) && n_iter <= max_iter) {
       if (abs(mean(yfit_score)) > tilt_stop_crit) {
-
 
         y_up_fit <- glm(
           "Yscaled ~ 1 + offset(qlogis(yscaled.mtrc_valid_r1))",
@@ -338,7 +334,6 @@ tmle.medMO <- function(
       1*(tt==tval)*(R==0) / bound_propensity(tval.c_pred_valid * (1 - r1.tc_pred_valid))
     })
 
-    # Iterative targeting
     vfit_score <- Inf
     eif_stop_crit <- FALSE
     n_iter <- 0
@@ -378,7 +373,6 @@ tmle.medMO <- function(
     # tml_data$vscaled_pred_valid
     # v_tmle <- plogis(qlogis(v_pred_valid) + coef(v_trc_up_fit))
 
-
     # tmle y1_c
     se_eif <- as.numeric(sqrt(var(tml_data$eif_y1) / length(tml_data$eif_y1) ))
     tilt_stop_crit <- se_eif / log(length(tml_data$eif_y1))
@@ -388,7 +382,6 @@ tmle.medMO <- function(
       1*(tt==tval)*(R==1) / bound_propensity(tval.c_pred_valid * (r1.tc_pred_valid))
     })
 
-    # iterative targeting
     eif_stop_crit <- FALSE
     n_iter <- 0
     y_c_fit_score <- Inf
@@ -398,7 +391,7 @@ tmle.medMO <- function(
 
         y_c_up_fit <- glm(
           "Yscaled ~ 1 + offset(qlogis(yscaled.trc_valid_r1))",
-          weights = H_y1.trc, # only the overlap part
+          weights = H_y1.trc,
           family="quasibinomial", start = 0, data=tml_data
         )
         y_c_up_fit$df.null
@@ -427,7 +420,7 @@ tmle.medMO <- function(
     }
 
     # y1_tmle <- predict(y_zc_up_fit, type = "response") # alternatively,
-    tml_data$y1scaled_tmle <- tml_data$yscaled.trc_valid_r1 # y1mean_c_up_r1
+    tml_data$y1scaled_tmle <- tml_data$yscaled.trc_valid_r1
 
 
     # tmle y0_c
@@ -444,7 +437,6 @@ tmle.medMO <- function(
     n_iter <- 0
     y_c_fit_score <- Inf
 
-    # iterative targeting
     while ( (!eif_stop_crit) && n_iter <= max_iter ) {
       if (abs(mean(y_c_fit_score)) > tilt_stop_crit) {
 
@@ -493,7 +485,6 @@ tmle.medMO <- function(
   tml_data_tt1 <- tilt.tval(tval = 1)
   tml_data_tt0 <- tilt.tval(tval = 0)
 
-
   # tml effect estimates
   tml_scores <- data.frame(
     Yt1r1 = tml_data_tt1$y1_tmle,
@@ -509,7 +500,6 @@ tmle.medMO <- function(
     reD_scores <- (Yt1r1.Mt1r0 - Yt1r0) - (Yt0r1.Mt0r0 - Yt0r0)
   })
   tml_estimates <- colMeans(tml_effects)
-
 
   # same asymptotic behavior as one-step estimator
   cv_components_tt1 <- crossfit_onestep$cv_components_tt1
@@ -575,25 +565,10 @@ eif.onefold <- function(fold,
     fold <- 0
   }
 
-
   # Fit models for components of the eif
   set.seed(12222)
 
-  if (Fit == "linear") {
-    SL_user.vfit <- SL_user <- c("SL.glm")
-  }
-  if (Fit != "linear") {
-    SL_user.vfit <- SL_user <- c("SL.glm", "SL.gam", "SL.ranger")
-  }
-
-  if (Yfamily == "binomial") {
-    if (Fit == "linear") {
-      SL_user.vfit <- c("SL.glm.scaledY")
-    }
-    if (Fit != "linear") {
-      SL_user.vfit <-  c("SL.glm.scaledY", "SL.gam.scaledY", "SL.ranger")
-    }
-  }
+  SL_user <- Fit
 
   r_out.tc <- fitting.R(
     train_data = train_data, valid_data = valid_data,
@@ -609,7 +584,6 @@ eif.onefold <- function(fold,
     Mnames = Mnames,
     SL_library = SL_user
   )
-
 
   # fit tt models
   t_out.c <- fitting.tt(
@@ -653,7 +627,7 @@ eif.onefold <- function(fold,
     r_out.tc = r_out.tc,
     r_out.mtc = r_out.mtc,
     Yfamily = Yfamily,
-    SL_library = SL_user.vfit
+    SL_library = SL_user
   )
 
   v_out.t0r0c <- fitting.v_pseudo(
@@ -667,7 +641,7 @@ eif.onefold <- function(fold,
     r_out.tc = r_out.tc,
     r_out.mtc = r_out.mtc,
     Yfamily = Yfamily,
-    SL_library = SL_user.vfit
+    SL_library = SL_user
   )
 
   # for validation data
@@ -705,7 +679,7 @@ eif.onefold <- function(fold,
     y.mtrc_valid_r1 <- predict(y_out.mtrc$y_fit, valid_data_r1[, y_out.mtrc$y_fit$varNames], onlySL = TRUE)$pred
 
 
-    # EIF scores calculating
+    # scores calculating
     west_y <- with(valid_data, {
       1*(tt==tval)*(R==1) * H_y.mtrc * (Y) /
         mean( 1*(tt==tval)*(R==1) * H_y.mtrc )
@@ -759,7 +733,6 @@ eif.onefold <- function(fold,
     })
 
 
-
     # Y( tval ) | r=0
     y.trc_valid_r0 <- predict(y_out.trc$y_fit, valid_data_r0[, y_out.trc$y_fit$varNames], onlySL = TRUE)$pred
 
@@ -793,7 +766,7 @@ eif.onefold <- function(fold,
       y.trc_valid_r0 = y.trc_valid_r0,
       y.trc_valid_r1 = y.trc_valid_r1,
       v_pred_valid = v_pred_valid,
-      # eif & estimator # grep("eif", ls(), value = TRUE) # grep("est", ls(), value = TRUE)
+
       # Y(1, Gm(tt=1)|0 ), eif & est
       eif = eif, est_reg = est_reg, west_y = west_y,
       # eif for Y(tt=1) | r1
@@ -851,8 +824,6 @@ scale_from_unit <- function(scaled_vals, max_orig, min_orig) {
 fitting.R <- function(train_data, valid_data,
                       rmodel = "R ~ tt + C",
                       Cnames, Mnames,
-                      # Znames = Znames,
-                      # Xnames,
                       SL_library = c("SL.glm")
 ) {
   RMnames <- paste0("RM.", Mnames)
@@ -896,7 +867,6 @@ fitting.R <- function(train_data, valid_data,
 fitting.tt <- function(train_data, valid_data,
                        tmodel = "tt ~ C",
                        Cnames, Mnames,
-                       # Znames,
                        Xnames,
                        SL_library = c("SL.glm")
 ) {
@@ -939,8 +909,6 @@ fitting.tt <- function(train_data, valid_data,
 fitting.M <- function(train_data, valid_data,
                       mmodel = "M ~ tt * R + C",
                       Cnames, Mnames,
-                      # Znames,
-                      # Xnames,
                       SL_library = c("SL.glm")
 
 ) {
@@ -982,13 +950,8 @@ fitting.Y <- function(train_data, valid_data,
                       ymodel = "Y ~ M * tt * R + C",
                       Cnames,
                       Mnames,
-                      # Znames = Znames,
-                      # Xnames,
                       SL_library = c("SL.glm"),
-                      Yfamily = "gaussian"
-                      # Yfamily = c(familyzero = "binomial", familypositive = "gaussian"),
-                      # SL_library =list(stage1=c("SL.glm","SL.glmnet", "SL.ranger"), stage2=c("SL.glm","SL.glmnet", "SL.ranger","SL.coxph"))
-                      # Yfamily = "zeroinfl", SL_library = "SL.zeroinfl" or SL_library == "SL.zinflasso"
+                      Yfamily = "binomial"
 ) {
 
   RMnames <- paste0("RM.", Mnames)
@@ -1013,62 +976,17 @@ fitting.Y <- function(train_data, valid_data,
 
   set.seed(9999)
 
-  if (length(Yfamily) == 2) {
-    # use the package "twostageSL" (separate fitting the zero component and the positive component): stage-1 for fitting Pr(Y>0 | X); stage-2 for fitting the conditional mean given non-zero, E[Y | Y>0, X]
-    sl_fit <- twostageSL(
-      Y = train_data$Y,
-      X = train_data[, cov_names],
-      twostage = TRUE,
-      # library.1stage = SL_library,# library.1stage	Candidate prediction algorithms in standard super learner.
-      family.1 = binomial, family.2 = Yfamily[2], # gaussian,
-      library.2stage = SL_library,
-      library.1stage = SL_library[[2]], family.single = "gaussian"
-    )
-    sl_pred_train <- predict(sl_fit, train_data[, cov_names], onlySL = TRUE)$pred
-    sl_pred_valid <- predict(sl_fit, valid_data[, cov_names], onlySL = TRUE)$pred
+  sl_fit <- SuperLearner(
+    Y = train_data$Y,
+    X = train_data[, cov_names],
+    # newX = valid_data[, cov_names],
+    family = Yfamily,
+    # obsWeights = train_data[, obs_weights],
 
-  }
-
-  # use the package "mpath" (zero-inflated linear model with lasso) or "pscl" (Zero-inflated Count Data Regression)
-  if (Yfamily == "zeroinfl") {
-    dat <- cbind(
-      Y = train_data$Y,
-      X = train_data[, cov_names]
-    )
-    dat <- data.frame(dat)
-    sl_fit <- zeroinfl(Y ~.|., data=dat, dist="poisson") # "negbin"
-
-    sl_pred_train <- predict(sl_fit, train_data[, cov_names], type = "response")
-    sl_pred_valid <- predict(sl_fit, valid_data[, cov_names], type = "response")
-  }
-  if (Yfamily == "zinflasso") {
-    dat <- cbind(
-      Y = train_data$Y,
-      X = train_data[, cov_names]
-    )
-    dat <- data.frame(dat)
-    sl_fit <- zipath(Y~.|.,data = dat, family = "poisson", nlambda=5)
-    cvsl_fit <- cv.zipath(Y~.|.,data = dat, family = "poisson", nlambda=5, plot=F)
-
-    sl_pred_train <- predict(sl_fit, newdata=train_data[, cov_names], type = "response", which=cvsl_fit$lambda.which)
-    sl_pred_valid <- predict(sl_fit, valid_data[, cov_names], type = "response", which=cvsl_fit$lambda.which)
-  }
-
-  if ((Yfamily %in% c("gaussian", "binomial")) & (length(Yfamily) == 1)) {
-    sl_fit <- SuperLearner(
-      Y = train_data$Y,
-      X = train_data[, cov_names],
-      # newX = valid_data[, cov_names],
-      family = Yfamily,
-      # obsWeights = train_data[, obs_weights],
-
-      SL.library = SL_library
-    )
-    sl_pred_train <- predict(sl_fit, train_data[, cov_names], onlySL = TRUE)$pred
-    sl_pred_valid <- predict(sl_fit, valid_data[, cov_names], onlySL = TRUE)$pred
-
-  }
-
+    SL.library = SL_library
+  )
+  sl_pred_train <- predict(sl_fit, train_data[, cov_names], onlySL = TRUE)$pred
+  sl_pred_valid <- predict(sl_fit, valid_data[, cov_names], onlySL = TRUE)$pred
 
   out <- list(
     y_pred_train = sl_pred_train,
@@ -1081,162 +999,12 @@ fitting.Y <- function(train_data, valid_data,
 
 
 
-fitting.u_pseudo <- function(train_data, valid_data,
-                             umodel = "u_pseudo ~ X + t1 + r1 + C",
-                             Cnames, Mnames, Xnames,
-                             SL_library = c("SL.glm"),
-                             y_out.mtrxc,
-                             x_out.mtrc,
-                             x_out.trc,
-                             t_out.rc,
-                             t_out.mrc,
-                             r_out.c,
-                             r_out.mc
-) {
-
-  if (umodel == "u_pseudo ~ X + t1 + r1 + C"){
-    cov_names <- c(Xnames, Cnames)
-  }
-
-  set.seed(9999)
-
-  # calculating psedo outcome
-  train_data_r1 <- train_data; train_data_r1$R <- 1; train_data_r1$tt <- 1
-  valid_data_r1 <- valid_data; valid_data_r1$R <- 1; valid_data_r1$tt <- 1
-
-  y_pred_train_r1 <- predict(y_out.mtrxc$y_fit, train_data_r1[, y_out.mtrxc$y_fit$varNames], onlySL = TRUE)$pred
-  y_pred_valid_r1 <- predict(y_out.mtrxc$y_fit, valid_data_r1[, y_out.mtrxc$y_fit$varNames], onlySL = TRUE)$pred
-
-  train_data_r0 <- train_data; train_data_r0$R <- 0; train_data_r0$tt <- 1
-  valid_data_r0 <- valid_data; valid_data_r0$R <- 0; valid_data_r0$tt <- 1
-
-  # w(r,t,x,m,c) -----
-  # , for training ----
-  # for x
-  x1.mtrc_pred_train_r1 <- predict(x_out.mtrc$x1_fit, train_data_r1[, x_out.mtrc$x1_fit$varNames])$pred
-
-  x1.trc_pred_train_r1 <- predict(x_out.trc$x1_fit, train_data_r1[, x_out.trc$x1_fit$varNames])$pred
-
-  # for r, given t=1
-  r1.c_pred_train <- (r_out.c$r1_pred_train)
-  r1.mc_pred_train <- (predict(r_out.mc$r1_fit, train_data_r1[, r_out.mc$r1_fit$varNames])$pred )
-
-  # for tt
-  t1.rc_pred_train_r0 <- predict(t_out.rc$t1_fit, train_data_r0[, t_out.rc$t1_fit$varNames])$pred
-  t1.rc_pred_train_r1 <- predict(t_out.rc$t1_fit, train_data_r1[, t_out.rc$t1_fit$varNames])$pred
-  t1.mrc_pred_train_r0 <- predict(t_out.mrc$t1_fit, train_data_r0[, t_out.mrc$t1_fit$varNames])$pred
-  t1.mrc_pred_train_r1 <- predict(t_out.mrc$t1_fit, train_data_r1[, t_out.mrc$t1_fit$varNames])$pred
-
-  # odds_rt_train <- with(train_data_r1, {
-  #   (r1.c_pred_train/(1-r1.c_pred_train)) *
-  #     ((1-r1.mc_pred_train)/(r1.mc_pred_train)) *
-  #     (t1.rc_pred_train_r1/t1.rc_pred_train_r0) *
-  #     (t1.mrc_pred_train_r0/t1.mrc_pred_train_r1)
-  # })
-  # calculate w
-
-  w_mtrxc_train <- with(train_data_r1, {
-
-    den <- (1-r1.c_pred_train)*(r1.mc_pred_train)*t1.rc_pred_train_r0*t1.mrc_pred_train_r1 * ( x1.mtrc_pred_train_r1*as.numeric(train_data_r1[, Xnames]==1) + (1 - x1.mtrc_pred_train_r1)*as.numeric(train_data_r1[, Xnames]==0) )
-    den <- bound_propensity(den)
-
-    nume <- r1.c_pred_train * (1-r1.mc_pred_train) * t1.rc_pred_train_r1 * t1.mrc_pred_train_r0 * ( x1.trc_pred_train_r1*as.numeric(train_data_r1[, Xnames]==1) + (1 - x1.trc_pred_train_r1)*as.numeric(train_data_r1[, Xnames]==0) )
-
-    nume / den
-    # odds_rt_train * I(train_data_r1[, Xnames]==1)*
-    #   (x1.trc_pred_train_r1 / x1.mtrc_pred_train_r1) +
-    #   odds_rt_train * I(train_data_r1[, Xnames]==0)*
-    #   ((1 - x1.trc_pred_train_r1) / (1 - x1.mtrc_pred_train_r1))
-  })
-
-
-
-  u_pseudo_train <- y_pred_train_r1 * w_mtrxc_train
-
-  # , for valid -----
-  # for x
-  x1.mtrc_pred_valid_r1 <- predict(x_out.mtrc$x1_fit, valid_data_r1[, x_out.mtrc$x1_fit$varNames])$pred
-
-  x1.trc_pred_valid_r1 <- predict(x_out.trc$x1_fit, valid_data_r1[, x_out.trc$x1_fit$varNames])$pred
-
-  # for r, given t=1
-  r1.c_pred_valid <- r_out.c$r1_pred_valid
-  r1.mc_pred_valid <- predict(r_out.mc$r1_fit, valid_data_r1[, r_out.mc$r1_fit$varNames])$pred
-
-  # for tt
-  t1.rc_pred_valid_r0 <- predict(t_out.rc$t1_fit, valid_data_r0[, t_out.rc$t1_fit$varNames])$pred
-  t1.rc_pred_valid_r1 <- predict(t_out.rc$t1_fit, valid_data_r1[, t_out.rc$t1_fit$varNames])$pred
-  t1.mrc_pred_valid_r0 <- predict(t_out.mrc$t1_fit, valid_data_r0[, t_out.mrc$t1_fit$varNames])$pred
-  t1.mrc_pred_valid_r1 <- predict(t_out.mrc$t1_fit, valid_data_r1[, t_out.mrc$t1_fit$varNames])$pred
-
-  # odds_rt_valid <- with(valid_data_r1, {
-  #   (r1.c_pred_valid/(1-r1.c_pred_valid)) *
-  #     ((1-r1.mc_pred_valid)/(r1.mc_pred_valid)) *
-  #     (t1.rc_pred_valid_r1/t1.rc_pred_valid_r0) *
-  #     (t1.mrc_pred_valid_r0/t1.mrc_pred_valid_r1)
-  # })
-  # calculate w
-  w_mtrxc_valid <- with(valid_data_r1, {
-
-    den <- (1-r1.c_pred_valid)*(r1.mc_pred_valid)*t1.rc_pred_valid_r0*t1.mrc_pred_valid_r1 * ( x1.mtrc_pred_valid_r1*as.numeric(valid_data_r1[, Xnames]==1) + (1 - x1.mtrc_pred_valid_r1)*as.numeric(valid_data_r1[, Xnames]==0) )
-    den <- bound_propensity(den)
-
-    nume <- r1.c_pred_valid * (1-r1.mc_pred_valid) * t1.rc_pred_valid_r1 * t1.mrc_pred_valid_r0 * ( x1.trc_pred_valid_r1*as.numeric(valid_data_r1[, Xnames]==1) + (1 - x1.trc_pred_valid_r1)*as.numeric(valid_data_r1[, Xnames]==0) )
-
-    nume / den
-    # odds_rt_valid * I(valid_data_r1[, Xnames]==1)*
-    #   (x1.trc_pred_valid_r1 / x1.mtrc_pred_valid_r1) +
-    #   odds_rt_valid * I(valid_data_r1[, Xnames]==0)*
-    #   ((1 - x1.trc_pred_valid_r1) / (1 - x1.mtrc_pred_valid_r1))
-  })
-
-  u_pseudo_valid <- y_pred_valid_r1 * w_mtrxc_valid
-
-
-  # fit u_pseudo ----------------------------
-
-  u_train_data <- train_data # should here only be the subsample with R==1?
-  u_train_data$u_pseudo_train <- u_pseudo_train
-
-  u_train_data <- u_train_data[u_train_data$R==1 & u_train_data$tt==1, ]
-
-
-  sl_fit <- SuperLearner(
-    Y = u_train_data$u_pseudo_train,
-    X = u_train_data[, cov_names],
-    family = "gaussian",
-    # obsWeights = u_train_data[, obs_weights],
-    SL.library = SL_library
-  )
-  sl_pred_train <- predict(sl_fit, u_train_data[, cov_names], onlySL = TRUE)$pred
-
-  u_valid_data <- valid_data
-  u_valid_data$u_pseudo_valid <- u_pseudo_valid
-
-  sl_pred_valid <- predict(sl_fit, u_valid_data[, cov_names], onlySL = TRUE)$pred
-
-  out <- list(
-    y_pred_valid_r1 = y_pred_valid_r1,
-    u_pseudo_valid = u_pseudo_valid,
-    w_mtrxc_valid = w_mtrxc_valid,
-
-    u_pred_train = sl_pred_train,
-    u_pred_valid = sl_pred_valid,
-    u_fit = sl_fit
-  )
-
-  return(out)
-}
-
-
 fitting.v_pseudo <- function(train_data, valid_data,
                              vmodel = "v_pseudo ~ t1 + r0 + C",
                              alltrain = FALSE,
-                             Cnames, Mnames, # Xnames,
+                             Cnames, Mnames,
                              SL_library = c("SL.glm"),
                              y_out.mtrc,
-                             # x_out.mtrc,
-                             # x_out.trc,
                              t_out.c,
                              r_out.tc,
                              r_out.mtc,
@@ -1256,7 +1024,6 @@ fitting.v_pseudo <- function(train_data, valid_data,
   ttMnames <- paste0("ttM.", Mnames)
   ttRMnames <- paste0("ttRM.", Mnames)
 
-  # when tt = 1 -----
   if (vmodel %in% c("v_pseudo ~ t1 + r0 + C", "y_M ~ t1 + r0 + C", "y_M ~ t1 + r1 + C") ) {
 
     train_data_r0 <- train_data; train_data_r0$R <- 0; train_data_r0$tt <- 1
@@ -1286,7 +1053,6 @@ fitting.v_pseudo <- function(train_data, valid_data,
 
     # creating outcome and training data
 
-    # for v_pseudo -------
     if (vmodel == "v_pseudo ~ t1 + r0 + C") {
       # for training
 
@@ -1309,13 +1075,11 @@ fitting.v_pseudo <- function(train_data, valid_data,
       v_train_data <- train_data
       v_train_data$v_pseudo_train <- v_pseudo_train
       if (alltrain == FALSE) {
-        # here only use the subsample with R==0, differing from the rvalue for pseudo outcome
         v_train_data <- v_train_data[v_train_data$R==0 & v_train_data$tt==1, ]
       }
     }
 
 
-    # for E[Y | tt=1, r=0] -----
     if (vmodel == "y_M ~ t1 + r0 + C") {
       # for training
 
@@ -1337,7 +1101,6 @@ fitting.v_pseudo <- function(train_data, valid_data,
       # fit v_pseudo
       v_train_data <- train_data
       v_train_data$v_pseudo_train <- v_pseudo_train
-      # here only use the subsample with R==0
       if (alltrain == FALSE) {
         v_train_data <- v_train_data[v_train_data$R==0 & v_train_data$tt==1, ]
       }
@@ -1345,10 +1108,8 @@ fitting.v_pseudo <- function(train_data, valid_data,
     }
 
 
-    # for E[Y | tt=1, r=1] -------
     if (vmodel == "y_M ~ t1 + r1 + C") {
       # for training
-
       y_pred_train_r1 <- predict(y_out.mtrc$y_fit, train_data_r1[, y_out.mtrc$y_fit$varNames], onlySL = TRUE)$pred
       if (Yfamily == "binomial") {
         y_pred_train_r1 <- bound_precision(y_pred_train_r1)
@@ -1356,7 +1117,6 @@ fitting.v_pseudo <- function(train_data, valid_data,
       v_pseudo_train <- y_pred_train_r1
 
       #for valid
-
       y_pred_valid_r1 <- predict(y_out.mtrc$y_fit, valid_data_r1[, y_out.mtrc$y_fit$varNames], onlySL = TRUE)$pred
       if (Yfamily == "binomial") {
         y_pred_valid_r1 <- bound_precision(y_pred_valid_r1)
@@ -1367,7 +1127,7 @@ fitting.v_pseudo <- function(train_data, valid_data,
       # fit v_pseudo
       v_train_data <- train_data
       v_train_data$v_pseudo_train <- v_pseudo_train
-      # here only use the subsample with R==1, the same as the rvalue for pseudo outcome
+
       if (alltrain == FALSE) {
         v_train_data <- v_train_data[v_train_data$R==1 & v_train_data$tt==1, ]
       }
@@ -1375,7 +1135,6 @@ fitting.v_pseudo <- function(train_data, valid_data,
 
   }
 
-  #  when tt = 0 -----
   if (vmodel %in% c("v_pseudo ~ t0 + r0 + C", "y_M ~ t0 + r0 + C", "y_M ~ t0 + r1 + C") ) {
 
     train_data_r0 <- train_data; train_data_r0$R <- 0; train_data_r0$tt <- 0
@@ -1402,11 +1161,8 @@ fitting.v_pseudo <- function(train_data, valid_data,
     valid_data_r1[, ttMnames] <- valid_data_r1$tt * valid_data_r1[, Mnames]
     valid_data_r1[, ttRMnames] <- valid_data_r1$tt * valid_data_r1$R * valid_data_r1[, Mnames]
 
-
-
     # creating outcome and training data
 
-    # for v_pseudo -------
     if (vmodel == "v_pseudo ~ t0 + r0 + C") {
       # for training
 
@@ -1428,7 +1184,7 @@ fitting.v_pseudo <- function(train_data, valid_data,
       # fit v_pseudo
       v_train_data <- train_data
       v_train_data$v_pseudo_train <- v_pseudo_train
-      # here only use the subsample with R==0, differing from the rvalue for pseudo outcome
+
       if (alltrain == FALSE) {
         v_train_data <- v_train_data[v_train_data$R==0 & v_train_data$tt==0, ]
       }
@@ -1436,7 +1192,6 @@ fitting.v_pseudo <- function(train_data, valid_data,
     }
 
 
-    # for E[Y | tt=0, r=0] -----
     if (vmodel == "y_M ~ t0 + r0 + C") {
       # for training
 
@@ -1458,7 +1213,6 @@ fitting.v_pseudo <- function(train_data, valid_data,
       # fit v_pseudo
       v_train_data <- train_data
       v_train_data$v_pseudo_train <- v_pseudo_train
-      # here only use the subsample with R==0
       if (alltrain == FALSE) {
         v_train_data <- v_train_data[v_train_data$R==0 & v_train_data$tt==0, ]
       }
@@ -1466,7 +1220,6 @@ fitting.v_pseudo <- function(train_data, valid_data,
     }
 
 
-    # for E[Y | tt=0, r=1] -------
     if (vmodel == "y_M ~ t0 + r1 + C") {
       # for training
 
@@ -1488,7 +1241,6 @@ fitting.v_pseudo <- function(train_data, valid_data,
       # fit v_pseudo
       v_train_data <- train_data
       v_train_data$v_pseudo_train <- v_pseudo_train
-      # here only use the subsample with R==1, the same as the rvalue for pseudo outcome
       if (alltrain==FALSE) {
         v_train_data <- v_train_data[v_train_data$R==1 & v_train_data$tt==0, ]
       }
@@ -1496,8 +1248,6 @@ fitting.v_pseudo <- function(train_data, valid_data,
     }
   }
 
-  # fitting ------
-  # cov_names <- c(Cnames)
   if (alltrain==TRUE) {
     cov_names <- c("tt", "R", "ttR", Cnames)
   }
@@ -1508,21 +1258,16 @@ fitting.v_pseudo <- function(train_data, valid_data,
     sl_fit <- SuperLearner(
       Y = v_train_data$v_pseudo_train,
       X = v_train_data[, cov_names],
-      # family = Yfamily, #
-      # family = "binomial",
-      # obsWeights = v_train_data[, obs_weights],
-      SL.library = SL_library #if Yfamily=="binomial", SL_library=c("SL.glm.scaledY", "SL.gam.scaledY", "SL.glmnet.scaledY", "SL.ranger.scaledY")
+      SL.library = SL_library
     )
   )
-  # only covariates C are used in prediction, which are the same across the datasets, _data_r0, _data_r1, etc.
+
   sl_pred_train <- predict(sl_fit, train_data[, cov_names], onlySL = TRUE)$pred
   sl_pred_valid <- predict(sl_fit, valid_data[, cov_names], onlySL = TRUE)$pred
 
 
   out <- list(
     v_pseudo_valid = v_pseudo_valid,
-    # y_pred_valid_r1m0 = y_pred_valid_r1m0,
-    # y_pred_valid_r1m1 = y_pred_valid_r1m1,
     v_pred_train = sl_pred_train,
     v_pred_valid = sl_pred_valid,
     v_fit = sl_fit
@@ -1530,6 +1275,7 @@ fitting.v_pseudo <- function(train_data, valid_data,
 
   return(out)
 }
+
 
 
 SL.gam.scaledY <- function(..., family =  binomial() ) { #"quasibinomial"
@@ -1656,4 +1402,3 @@ SL.xgboost.scaledY <- function (Y, X, newX, family, obsWeights, id, ntrees = 100
   out = list(pred = pred, fit = fit)
   return(out)
 }
-
