@@ -1,9 +1,8 @@
 # The estimation in the illustrative example was implemented using the R package.
 devtools::install_github(repo = "xliu12/meD", subdir = "pkg/meD")
-# The dataset used comes from the Linking the Interests of Families and Teachers (LIFT) Study, which is not available.
 
-# data_in
 # The dataset used comes from the Linking the Interests of Families and Teachers (LIFT) Study, which is not available.
+# data_in
 
 estimates <- meDreD(
   data_in, # data frame containing the variables;
