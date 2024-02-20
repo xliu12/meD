@@ -1,6 +1,6 @@
 # The estimation in the illustrative example was implemented using the R package.
-devtools::install_github(repo = "xliu12/meD", subdir = "pkg/meD")
-
+devtools::install_github(repo = "xliu12/meD", subdir = "pkg/meD", build_manual = TRUE)
+?meD::meDreD
 # The dataset used comes from the Linking the Interests of Families and Teachers (LIFT) Study, which is not available.
 # data_in
 

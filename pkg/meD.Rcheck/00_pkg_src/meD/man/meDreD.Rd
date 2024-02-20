@@ -2,7 +2,7 @@
 % Please edit documentation in R/meDreD.R
 \name{meDreD}
 \alias{meDreD}
-\title{Estimation of the mediated moderation and remaining moderation}
+\title{Estimation of the mediated moderation (meD) and remaining moderation (reD)}
 \usage{
 meDreD(
   data_in,
@@ -36,7 +36,7 @@ column "Y" is the outcome.}
 A data frame containing the estimates of the mediated moderation (meD) and remaining moderation (reD), as well as the total moderation (toD) and the average potential outcomes in the effect definitions. These include the average potential outcomes of each subgroup under each treatment assignment (Yt1r1, Yt1r0, Yt0r1, Yt0r0), and the average potential outcomes of the comparison subgroup if the potential mediator distribution were shifted to be the same as that of the reference subgroup (Yt1r1.Mt1r0, Yt0r1.Mt0r0). The output also includes the 0.95 confidence intervals constructed based on the asymptotic variance estimates (column names ending with "_interval.1" and "_interval.2").
 }
 \description{
-Estimation of the mediated moderation and remaining moderation
+Estimation of the mediated moderation (meD) and remaining moderation (reD)
 }
 \examples{
  # data(data_in)

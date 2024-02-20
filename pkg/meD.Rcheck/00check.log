@@ -1,0 +1,147 @@
+* using log directory ‘/Users/xl9663/Library/CloudStorage/Box-Box/Labs/Mediated/R_mediated/meD/pkg/meD.Rcheck’
+* using R version 4.2.1 (2022-06-23)
+* using platform: x86_64-apple-darwin17.0 (64-bit)
+* using session charset: UTF-8
+* using options ‘--no-manual --as-cran’
+* checking for file ‘meD/DESCRIPTION’ ... OK
+* checking extension type ... Package
+* this is package ‘meD’ version ‘0.1.0’
+* package encoding: UTF-8
+* checking package namespace information ... OK
+* checking package dependencies ... OK
+* checking if this is a source package ... OK
+* checking if there is a namespace ... OK
+* checking for executable files ... OK
+* checking for hidden files and directories ... OK
+* checking for portable file names ... OK
+* checking for sufficient/correct file permissions ... OK
+* checking whether package ‘meD’ can be installed ... OK
+* checking installed package size ... OK
+* checking package directory ... OK
+* checking for future file timestamps ... OK
+* checking DESCRIPTION meta-information ... OK
+* checking top-level files ... OK
+* checking for left-over files ... OK
+* checking index information ... OK
+* checking package subdirectories ... OK
+* checking R files for non-ASCII characters ... OK
+* checking R files for syntax errors ... OK
+* checking whether the package can be loaded ... OK
+* checking whether the package can be loaded with stated dependencies ... OK
+* checking whether the package can be unloaded cleanly ... OK
+* checking whether the namespace can be loaded with stated dependencies ... OK
+* checking whether the namespace can be unloaded cleanly ... OK
+* checking loading without being on the library search path ... OK
+* checking dependencies in R code ... NOTE
+Namespaces in Imports field not imported from:
+  ‘SuperLearner’ ‘gam’ ‘mvtnorm’ ‘nnet’ ‘tidyverse’
+  All declared Imports should be used.
+* checking S3 generic/method consistency ... OK
+* checking replacement functions ... OK
+* checking foreign function calls ... OK
+* checking R code for possible problems ... NOTE
+SL.earth.scaledY: no visible global function definition for ‘binomial’
+SL.earth.scaledY: no visible global function definition for ‘SL.earth’
+SL.gam.scaledY: no visible global function definition for ‘binomial’
+SL.gam.scaledY: no visible global function definition for ‘SL.gam’
+SL.glm.scaledY: no visible global function definition for ‘binomial’
+SL.glm.scaledY: no visible global function definition for ‘SL.glm’
+SL.glmnet.scaledY: no visible global function definition for
+  ‘model.matrix’
+SL.glmnet.scaledY: no visible global function definition for ‘predict’
+SL.nnet.modified: no visible global function definition for ‘binomial’
+SL.nnet.modified: no visible global function definition for ‘SL.nnet’
+SL.ranger.scaledY: no visible global function definition for ‘predict’
+SL.xgboost.scaledY: no visible global function definition for
+  ‘model.matrix’
+SL.xgboost.scaledY: no visible global function definition for ‘predict’
+crossfit.onestep: no visible binding for global variable ‘Yt1r1’
+crossfit.onestep: no visible binding for global variable ‘Yt0r1’
+crossfit.onestep: no visible binding for global variable ‘Yt1r0’
+crossfit.onestep: no visible binding for global variable ‘Yt0r0’
+crossfit.onestep: no visible binding for global variable ‘Yt1r1.Mt1r0’
+crossfit.onestep: no visible binding for global variable ‘Yt0r1.Mt0r0’
+crossfit.onestep : <anonymous>: no visible global function definition
+  for ‘var’
+crossfit.onestep : <anonymous>: no visible global function definition
+  for ‘qnorm’
+eif.onefold : components.tval: no visible global function definition
+  for ‘predict’
+fitting.M: no visible global function definition for ‘SuperLearner’
+fitting.M: no visible global function definition for ‘predict’
+fitting.R: no visible global function definition for ‘SuperLearner’
+fitting.R: no visible global function definition for ‘binomial’
+fitting.R: no visible global function definition for ‘predict’
+fitting.Y: no visible global function definition for ‘SuperLearner’
+fitting.Y: no visible global function definition for ‘predict’
+fitting.tt: no visible global function definition for ‘SuperLearner’
+fitting.tt: no visible global function definition for ‘binomial’
+fitting.tt: no visible global function definition for ‘predict’
+fitting.v_pseudo: no visible global function definition for ‘predict’
+fitting.v_pseudo: no visible global function definition for
+  ‘SuperLearner’
+meDreD: no visible global function definition for ‘%>%’
+meDreD: no visible global function definition for ‘mutate’
+meDreD: no visible binding for global variable ‘ttR’
+tmle.medMO: no visible binding for global variable ‘crossfit_out’
+tmle.medMO : tilt.tval: no visible global function definition for ‘var’
+tmle.medMO : tilt.tval: no visible global function definition for ‘glm’
+tmle.medMO : tilt.tval: no visible binding for global variable
+  ‘H_y.mtrc’
+tmle.medMO : tilt.tval: no visible global function definition for
+  ‘coef’
+tmle.medMO : tilt.tval: no visible binding for global variable
+  ‘H_v.trc’
+tmle.medMO : tilt.tval: no visible global function definition for
+  ‘predict’
+tmle.medMO : tilt.tval: no visible binding for global variable
+  ‘H_y1.trc’
+tmle.medMO : tilt.tval: no visible global function definition for
+  ‘plogis’
+tmle.medMO : tilt.tval: no visible global function definition for
+  ‘qlogis’
+tmle.medMO : tilt.tval: no visible binding for global variable
+  ‘H_y0.trc’
+tmle.medMO: no visible binding for global variable ‘Yt1r1’
+tmle.medMO: no visible binding for global variable ‘Yt0r1’
+tmle.medMO: no visible binding for global variable ‘Yt1r0’
+tmle.medMO: no visible binding for global variable ‘Yt0r0’
+tmle.medMO: no visible binding for global variable ‘Yt1r1.Mt1r0’
+tmle.medMO: no visible binding for global variable ‘Yt0r1.Mt0r0’
+tmle.medMO : <anonymous>: no visible global function definition for
+  ‘var’
+tmle.medMO: no visible global function definition for ‘qnorm’
+Undefined global functions or variables:
+  %>% H_v.trc H_y.mtrc H_y0.trc H_y1.trc SL.earth SL.gam SL.glm SL.nnet
+  SuperLearner Yt0r0 Yt0r1 Yt0r1.Mt0r0 Yt1r0 Yt1r1 Yt1r1.Mt1r0 binomial
+  coef crossfit_out glm model.matrix mutate plogis predict qlogis qnorm
+  ttR var
+Consider adding
+  importFrom("stats", "binomial", "coef", "glm", "model.matrix",
+             "plogis", "predict", "qlogis", "qnorm", "var")
+to your NAMESPACE file.
+* checking Rd files ... OK
+* checking Rd metadata ... OK
+* checking Rd line widths ... OK
+* checking Rd cross-references ... OK
+* checking for missing documentation entries ... WARNING
+Undocumented code objects:
+  ‘data_in’
+Undocumented data sets:
+  ‘data_in’
+All user-level objects in a package should have documentation entries.
+See chapter ‘Writing R documentation files’ in the ‘Writing R
+Extensions’ manual.
+* checking for code/documentation mismatches ... OK
+* checking Rd \usage sections ... OK
+* checking Rd contents ... OK
+* checking for unstated dependencies in examples ... OK
+* checking contents of ‘data’ directory ... OK
+* checking data for non-ASCII characters ... OK
+* checking LazyData ... OK
+* checking data for ASCII and uncompressed saves ... OK
+* checking examples ... OK
+* checking for non-standard things in the check directory ... OK
+* checking for detritus in the temp directory ... OK
+* DONE
+Status: 1 WARNING, 2 NOTEs

@@ -1,5 +1,5 @@
 
-#' Estimation of the mediated moderation and remaining moderation
+#' Estimation of the mediated moderation (meD) and remaining moderation (reD)
 #' @param data_in a \code{data.frame} containing the observed data.
 #'    In "data_in", column "tt" is the treatment assignment ("tt" is coded as 0 for individuals in the control condition and as 1 for individuals in the treatment condition);
 #'    column "R" is a dummy indicator of the subgroup status.
@@ -125,7 +125,6 @@ meDreD <- function(
       tml_interval = t(tmle_out$tml_intervals)
     )
   }
-  row.names(results) <- NULL
 
 
   return(results)
