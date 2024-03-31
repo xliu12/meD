@@ -49,8 +49,8 @@ meDreD <- function(
 
   data_in$id <- 1:nrow(data_in)
   data_in$obs_weights_Y <- rep(1, nrow(data_in))
-  Cnames <- grep("Cdat", colnames(data_in), value = T)
-  Mnames <- grep("Mdat", colnames(data_in), value = T)
+  # Cnames <- grep("Cdat", colnames(data_in), value = T)
+  # Mnames <- grep("Mdat", colnames(data_in), value = T)
 
   # add interactions among the key variables
   data_in <- data_in %>% mutate(
@@ -150,7 +150,7 @@ crossfit.onestep <- function(
 
   set.seed(12345)
 
-  if(cv_folds < 1) {
+  if(cv_folds <= 1) {
     cv_eif_out <- eif.onefold(fold = 0,
                               data_in = data_in,
                               Cnames = Cnames,
