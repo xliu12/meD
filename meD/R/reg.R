@@ -95,7 +95,7 @@ reg.medmod <- function(data_in,
   boots <- purrr::map_df(1:4, each.boot) 
 
   
-  reg_estimate <- effect(each.boot(boot = 0), Yt1only = Yt1only)
+  reg_estimate <- effect(each.boot(boot = 500), Yt1only = Yt1only)
   
   boots_eff <- effect(boots, Yt1only = Yt1only)
   
