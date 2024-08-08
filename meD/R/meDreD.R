@@ -139,14 +139,13 @@ crossfit.onestep <- function(
   set.seed(12345)
 
   if(cv_folds <= 1) {
-    cv_eif_out <- eif.onefold(fold = 0,
+    cv_eif_out <- try(suppressWarnings(eif.onefold(fold = 0,
                               data_in = data_in,
                               Cnames = Cnames,
                               Mnames = Mnames,
                               Fit = Fit,
                               Yfamily = Yfamily,
-                              cv = FALSE
-    )
+                              cv = FALSE)), silent = TRUE)
 
     cv_components_tt1 <- cv_eif_out[["components_tt1"]]
     # do.call(rbind, cv_eif_out[["components_tt1"]])
@@ -156,36 +155,7 @@ crossfit.onestep <- function(
     cv_components_tt0 <- cv_components_tt0[order(cv_components_tt0$valid_set), ]
   }
 
-  # if (cv_folds > 1) {
-  #   # create cross-validation folds
-  #   folds <- origami::make_folds(data_in,
-  #                                fold_fun = origami::folds_vfold,
-  #                                V = cv_folds
-  #   )
-  #   
-  #   
-  # 
-  #   cv_eif_out <- origami::cross_validate(
-  #     cv_fun = eif.onefold,
-  #     folds = folds,
-  #     data_in = data_in,
-  #     Cnames = Cnames,
-  #     Mnames = Mnames,
-  #     Fit = Fit,
-  #     Yfamily = Yfamily,
-  #     cv = TRUE,
-  #     use_future = FALSE, .combine = FALSE
-  #   )
-  # 
-  #   obs_valid_idx <- do.call(c, lapply(folds, `[[`, "validation_set"))
-  # 
-  #   cv_components_tt1 <- do.call(rbind, cv_eif_out[["components_tt1"]])
-  #   cv_components_tt1 <- cv_components_tt1[order(cv_components_tt1$valid_id), ]
-  # 
-  #   cv_components_tt0 <- do.call(rbind, cv_eif_out[["components_tt0"]])
-  #   cv_components_tt0 <- cv_components_tt0[order(cv_components_tt0$valid_id), ]
-  # 
-  # }
+ 
   
   if(cv_folds > 1) {
     data_in <- data_in %>%
@@ -221,7 +191,7 @@ crossfit.onestep <- function(
     
     eif_tt1 <- eif_tt0 <- NULL
     for(v in 1:cv_folds) {
-      eif_out <- eif.onefold(
+      eif_out <- try(suppressWarnings(eif.onefold(
         v = v,
         folds = folds,
         data_in = data_in,
@@ -230,7 +200,8 @@ crossfit.onestep <- function(
         Fit = Fit,
         Yfamily = Yfamily,
         cv = TRUE
-      )
+      )), silent = TRUE)
+      
       
       eif_tt1 <- rbind(eif_tt1, eif_out$components_tt1)
       eif_tt0 <- rbind(eif_tt0, eif_out$components_tt0)
