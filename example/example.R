@@ -31,7 +31,7 @@ estimates <- MedMod(
   Yname = "Y", ttname = "tt", Rname = "R", Mnames = Mnames, 
   Cnames = Cnames,
   estimator = c("onestep"), 
-  nuisance_estimation = c("SL.glm", "SL.nnet"),
+  nuisance_estimation = c("SL.glm", "SL.xgboost", "SL.ranger"),
   num_folds = 5
 )
 estimates
