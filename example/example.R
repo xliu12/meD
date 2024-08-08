@@ -26,6 +26,8 @@ library(SuperLearner)
 # see available methods to estimate the models (e.g., SL.glm runs generalized linear model)
 SuperLearner::listWrappers()
 
+set.seed(12345)
+
 estimates <- MedMod(
   data = data_example,
   Yname = "Y", ttname = "tt", Rname = "R", Mnames = Mnames, 
