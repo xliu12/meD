@@ -31,7 +31,7 @@ estimates <- MedMod(
   Yname = "Y", ttname = "tt", Rname = "R", Mnames = Mnames, 
   Cnames = Cnames,
   estimator = c("onestep"), 
-  nuisance_estimation = c("SL.glm", "SL.xgboost", "SL.ranger"),
+  nuisance_estimation = c("SL.glm", "SL.xgboost", "SL.ranger"), # SL.xgboost can take a longer time to run; for trying out the code, may choose other (faster) methods from SuperLearner::listWrappers() 
   num_folds = 5
 )
 estimates
