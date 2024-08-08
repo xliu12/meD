@@ -188,36 +188,36 @@ crossfit.onestep <- function(
   # }
   
   if(cv_folds > 1) {
-    # data_in <- data_in %>%
-    #   group_by(R, tt) %>% mutate(K = cur_group_id())
-    # fold_K <- lapply(unique(data_in$K), FUN = function(k=1) {
-    # 
-    #   if (nrow(data_in[data_in$K==k, ]) >= 1) {
-    #     fk <- origami::make_folds(data_in[data_in$K==k, ],
-    #                               fold_fun = origami::folds_vfold,
-    #                               V = cv_folds)
-    #     fold_k <- fk
-    #     for(v in 1:cv_folds) {
-    #       fold_k[[v]]$validation_set <- data_in$id[data_in$K==k][fk[[v]]$validation_set]
-    #       fold_k[[v]]$training_set <- data_in$id[data_in$K==k][fk[[v]]$training_set]
-    #     }
-    #   }
-    # 
-    #  return(fold_k)
-    # } )
-    # 
+    data_in <- data_in %>%
+      group_by(R, tt) %>% mutate(K = cur_group_id())
+    fold_K <- lapply(unique(data_in$K), FUN = function(k=1) {
+
+      if (nrow(data_in[data_in$K==k, ]) >= 1) {
+        fk <- origami::make_folds(data_in[data_in$K==k, ],
+                                  fold_fun = origami::folds_vfold,
+                                  V = cv_folds)
+        fold_k <- fk
+        for(v in 1:cv_folds) {
+          fold_k[[v]]$validation_set <- data_in$id[data_in$K==k][fk[[v]]$validation_set]
+          fold_k[[v]]$training_set <- data_in$id[data_in$K==k][fk[[v]]$training_set]
+        }
+      }
+
+     return(fold_k)
+    } )
+
     folds <- origami::make_folds(data_in,
                                  fold_fun = origami::folds_vfold,
                                  V = cv_folds)
-    # v <- 1
-    # for(v in 1:cv_folds) {
-    #   folds[[v]]$validation_set <- unlist(lapply(1:length(fold_K), FUN = function(k=1) {
-    #     fold_K[[k]][[v]]$validation_set
-    #   }))
-    #   folds[[v]]$training_set <- unlist(lapply(1:length(fold_K), FUN = function(k=1) {
-    #     fold_K[[k]][[v]]$training_set
-    #   }))
-    # }
+    v <- 1
+    for(v in 1:cv_folds) {
+      folds[[v]]$validation_set <- unlist(lapply(1:length(fold_K), FUN = function(k=1) {
+        fold_K[[k]][[v]]$validation_set
+      }))
+      folds[[v]]$training_set <- unlist(lapply(1:length(fold_K), FUN = function(k=1) {
+        fold_K[[k]][[v]]$training_set
+      }))
+    }
     
     eif_tt1 <- eif_tt0 <- NULL
     for(v in 1:cv_folds) {
