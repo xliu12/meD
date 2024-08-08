@@ -35,6 +35,9 @@ estimates <- MedMod(
   num_folds = 5
 )
 estimates
+
+
+# plot ---------------------------------------
 # focal/reference subgroup labels
 focal_subgroup_r1 <- "focal"
 ref_subgroup_r0 <- "reference"
