@@ -15,3 +15,44 @@ remotes::install_github(repo = "xliu12/meD", subdir = "meD")
 ```
 
 
+## Example
+
+```
+# Data ----------------------
+
+# import the data
+data(data_example)
+
+head(data_example)
+
+# tt: Treatment. In the example, the treatment is the treatment assignment (1 = intervention; 0 = control).
+# R: Subgroup. In the example, the subgroup is gender (1 = boy; 0 = girl).
+# Mdat.M_mediator1, Mdat.M_mediator2: Mediator. In the example, the mediator is a vector of intermediate risk factors. 
+# Y: Outcome. In the example, the outcome is tobacco use (1 = any use; 0 = no use).
+# Cdat.V1,...,Cdat.V5: Baseline (i.e., pre-treatment) covariate. 
+
+Mnames <- grep("^Mdat", colnames(data_example), value = TRUE)
+Cnames <- grep("^Cdat", colnames(data_example), value = TRUE)
+
+library(tidyverse)
+library(mvtnorm)
+
+library(SuperLearner)
+# see available methods to estimate the models (e.g., SL.glm runs generalized linear model)
+SuperLearner::listWrappers()
+
+# run ---------------------------------
+
+library(meD)
+
+estimates <- MedMod(
+  data = data_example,
+  Yname = "Y", ttname = "tt", Rname = "R", Mnames = Mnames, 
+  Cnames = Cnames,
+  estimator = c("onestep"), 
+  nuisance_estimation = c("SL.glm", "SL.xgboost", "SL.ranger"), 
+  num_folds = 5
+)
+estimates
+
+```
