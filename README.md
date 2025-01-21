@@ -17,19 +17,20 @@ remotes::install_github(repo = "xliu12/meD", subdir = "meD")
 
 ## Example
 
+We use a simulated example dataset, `data_example,` to illustrate the application. The dataset has the following variables:
+
+- `tt`: Treatment variable, which indicates the treatment assignment (1 = intervention; 0 = control).
+- `R`: Subgroup variable, which indicates the subgroup status (1 = boy; 0 = girl).
+- `Mdat.M_mediator1`, `Mdat.M_mediator2`: A mediator variable, which can be continuous or discrete and can be a multivariate vector. For example, suppose the mediator is a vector of intermediate risk factors. 
+- `Y`: Outcome variable, which can be continuous or binary. For example, suppose the outcome is adolescent tobacco use (1 = any use; 0 = no use).
+- `Cdat.V1`,...,`Cdat.V5`: Baseline (i.e., pre-treatment) covariates. 
+
 ```
-# Data ----------------------
 
 # import the data
 data(data_example)
 
 head(data_example)
-
-# tt: Treatment. In the example, the treatment is the treatment assignment (1 = intervention; 0 = control).
-# R: Subgroup. In the example, the subgroup is gender (1 = boy; 0 = girl).
-# Mdat.M_mediator1, Mdat.M_mediator2: Mediator. In the example, the mediator is a vector of intermediate risk factors. 
-# Y: Outcome. In the example, the outcome is tobacco use (1 = any use; 0 = no use).
-# Cdat.V1,...,Cdat.V5: Baseline (i.e., pre-treatment) covariate. 
 
 Mnames <- grep("^Mdat", colnames(data_example), value = TRUE)
 Cnames <- grep("^Cdat", colnames(data_example), value = TRUE)
@@ -41,7 +42,7 @@ library(SuperLearner)
 # see available methods to estimate the models (e.g., SL.glm runs generalized linear model)
 SuperLearner::listWrappers()
 
-# run ---------------------------------
+# run 
 
 library(meD)
 
