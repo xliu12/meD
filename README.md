@@ -17,7 +17,7 @@ remotes::install_github(repo = "xliu12/meD", subdir = "meD")
 
 ## Example
 
-We use a simulated example dataset, `data_example,` to illustrate the application. The dataset has the following variables:
+We use a simulated example dataset, `data_example`, to illustrate the application. The dataset has the following variables:
 
 - `tt`: Treatment variable, which indicates the treatment assignment (1 = intervention; 0 = control).
 - `R`: Subgroup variable, which indicates the subgroup status (1 = boy; 0 = girl).
